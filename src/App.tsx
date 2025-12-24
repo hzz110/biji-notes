@@ -1,0 +1,135 @@
+import { useState, useEffect, useCallback } from 'react'
+import NoteList from './components/NoteList'
+import NoteEditor from './components/NoteEditor'
+import { Note } from './types'
+import * as api from './services/api'
+import './App.css'
+
+function App() {
+  const [notes, setNotes] = useState<Note[]>([])
+  const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  // 从 API 加载笔记
+  const loadNotes = useCallback(async (query?: string) => {
+    try {
+      setLoading(true)
+      setError(null)
+      const fetchedNotes = await api.fetchNotes(query)
+      setNotes(fetchedNotes)
+      if (fetchedNotes.length > 0 && !selectedNoteId) {
+        setSelectedNoteId(fetchedNotes[0].id)
+      }
+    } catch (err) {
+      console.error('加载笔记失败:', err)
+      setError('加载笔记失败，请刷新页面重试')
+    } finally {
+      setLoading(false)
+    }
+  }, [selectedNoteId])
+
+  // 初始加载和搜索
+  useEffect(() => {
+    loadNotes(searchQuery)
+  }, [searchQuery, loadNotes])
+
+  // 创建新笔记
+  const handleCreateNote = async () => {
+    try {
+      const newNote = await api.createNote({
+        id: Date.now().toString(),
+        title: '新笔记',
+        content: '',
+      })
+      setNotes([newNote, ...notes])
+      setSelectedNoteId(newNote.id)
+    } catch (err) {
+      console.error('创建笔记失败:', err)
+      setError('创建笔记失败，请重试')
+    }
+  }
+
+  // 更新笔记
+  const handleUpdateNote = async (id: string, updates: Partial<Note>) => {
+    try {
+      const updatedNote = await api.updateNote(id, updates)
+      setNotes(notes.map(note => 
+        note.id === id ? updatedNote : note
+      ))
+    } catch (err) {
+      console.error('更新笔记失败:', err)
+      setError('更新笔记失败，请重试')
+      // 重新加载笔记以同步状态
+      loadNotes(searchQuery)
+    }
+  }
+
+  // 删除笔记
+  const handleDeleteNote = async (id: string) => {
+    try {
+      await api.deleteNote(id)
+      const updatedNotes = notes.filter(note => note.id !== id)
+      setNotes(updatedNotes)
+      if (selectedNoteId === id) {
+        setSelectedNoteId(updatedNotes.length > 0 ? updatedNotes[0].id : null)
+      }
+    } catch (err) {
+      console.error('删除笔记失败:', err)
+      setError('删除笔记失败，请重试')
+      // 重新加载笔记以同步状态
+      loadNotes(searchQuery)
+    }
+  }
+
+  // 使用搜索查询过滤（后端已处理，这里直接使用 notes）
+  const filteredNotes = notes
+
+  const selectedNote = notes.find(note => note.id === selectedNoteId)
+
+  return (
+    <div className="app">
+      <header className="app-header">
+        <h1>📝 在线笔记</h1>
+        <div className="header-actions">
+          <input
+            type="text"
+            placeholder="搜索笔记..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="search-input"
+          />
+          <button onClick={handleCreateNote} className="btn btn-primary" disabled={loading}>
+            + 新建笔记
+          </button>
+        </div>
+      </header>
+      {error && (
+        <div className="error-banner">
+          {error}
+          <button onClick={() => setError(null)}>×</button>
+        </div>
+      )}
+      {loading && notes.length === 0 ? (
+        <div className="loading">加载中...</div>
+      ) : (
+        <div className="app-content">
+          <NoteList
+            notes={filteredNotes}
+            selectedNoteId={selectedNoteId}
+            onSelectNote={setSelectedNoteId}
+            onDeleteNote={handleDeleteNote}
+          />
+          <NoteEditor
+            note={selectedNote}
+            onUpdateNote={handleUpdateNote}
+          />
+        </div>
+      )}
+    </div>
+  )
+}
+
+export default App
+
