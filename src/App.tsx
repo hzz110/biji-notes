@@ -97,9 +97,10 @@ function App() {
   }
 
   // 添加分类
-  const handleAddCategory = (categoryName: string) => {
+  const handleAddCategory = (_categoryName: string) => {
     // 分类已通过笔记自动提取，这里只是触发重新渲染
     // 实际分类会在创建笔记时使用
+    // 使用下划线前缀表示参数未使用
     setShowCategoryManager(false)
   }
 
