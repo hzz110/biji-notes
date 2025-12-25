@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import NoteList from './components/NoteList'
 import NoteEditor from './components/NoteEditor'
 import PasswordProtection from './components/PasswordProtection'
+import CategoryManager from './components/CategoryManager'
 import { Note } from './types'
 import * as api from './services/api'
 import './App.css'
@@ -13,10 +14,11 @@ function App() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [showCategoryManager, setShowCategoryManager] = useState(false)
   
-  // 获取所有分类（从笔记中提取）
+  // 获取所有分类（从笔记中提取，并添加默认分类）
   const categories = Array.from(
-    new Set(notes.map(note => note.category || '默认'))
+    new Set(['默认', ...notes.map(note => note.category || '默认')])
   ).sort()
 
   // 从 API 加载笔记
@@ -94,6 +96,47 @@ function App() {
     }
   }
 
+  // 添加分类
+  const handleAddCategory = (categoryName: string) => {
+    // 分类已通过笔记自动提取，这里只是触发重新渲染
+    // 实际分类会在创建笔记时使用
+    setShowCategoryManager(false)
+  }
+
+  // 删除分类
+  const handleDeleteCategory = async (categoryName: string) => {
+    if (categoryName === '默认') {
+      alert('不能删除默认分类')
+      return
+    }
+    
+    // 检查是否有笔记使用此分类
+    const notesWithCategory = notes.filter(note => note.category === categoryName)
+    if (notesWithCategory.length > 0) {
+      const confirmMessage = `有 ${notesWithCategory.length} 条笔记使用此分类。删除分类后，这些笔记将归入"默认"分类。确定要删除吗？`
+      if (!confirm(confirmMessage)) {
+        return
+      }
+      
+      // 将使用此分类的笔记改为默认分类
+      try {
+        for (const note of notesWithCategory) {
+          await api.updateNote(note.id, {
+            category: '默认',
+            categoryColor: '#2196f3'
+          })
+        }
+        // 重新加载笔记
+        loadNotes(searchQuery)
+      } catch (err) {
+        console.error('更新笔记分类失败:', err)
+        setError('更新笔记分类失败，请重试')
+      }
+    }
+    
+    setShowCategoryManager(false)
+  }
+
   // 使用搜索查询过滤（后端已处理，这里直接使用 notes）
   const filteredNotes = notes
 
@@ -118,9 +161,18 @@ function App() {
             onChange={(e) => setSearchQuery(e.target.value)}
             className="search-input"
           />
-          <button onClick={handleCreateNote} className="btn btn-primary" disabled={loading}>
-            + 新建笔记
-          </button>
+          <div className="header-buttons">
+            <button 
+              onClick={() => setShowCategoryManager(true)} 
+              className="btn btn-secondary"
+              title="分类管理"
+            >
+              📁 分类管理
+            </button>
+            <button onClick={handleCreateNote} className="btn btn-primary" disabled={loading}>
+              + 新建笔记
+            </button>
+          </div>
         </div>
       </header>
       {error && (
@@ -145,6 +197,14 @@ function App() {
             categories={categories}
           />
         </div>
+      )}
+      {showCategoryManager && (
+        <CategoryManager
+          categories={categories}
+          onAddCategory={handleAddCategory}
+          onDeleteCategory={handleDeleteCategory}
+          onClose={() => setShowCategoryManager(false)}
+        />
       )}
     </div>
   )

@@ -39,9 +39,9 @@
 }
 
 .note-category-indicator {
-  width: 4px;
+  width: 2px;
   min-height: 100%;
-  border-left: 4px solid #2196f3;
+  border-left: 2px solid #2196f3;
   flex-shrink: 0;
 }
 
