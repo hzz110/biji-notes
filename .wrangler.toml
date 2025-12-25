@@ -12,6 +12,12 @@ binding = "DB"
 database_name = "biji-notes-db"
 database_id = ""  # 在 Cloudflare Dashboard 创建数据库后填写
 
+# R2 存储配置
+# 注意：在生产环境中，需要在 Cloudflare Dashboard 中创建 R2 存储桶并绑定
+[[r2_buckets]]
+binding = "R2_BUCKET"
+bucket_name = "biji-images"  # R2 存储桶名称
+
 [env.production]
 name = "biji-notes"
 

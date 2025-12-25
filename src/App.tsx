@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import NoteList from './components/NoteList'
 import NoteEditor from './components/NoteEditor'
+import PasswordProtection from './components/PasswordProtection'
 import { Note } from './types'
 import * as api from './services/api'
 import './App.css'
@@ -11,6 +12,7 @@ function App() {
   const [searchQuery, setSearchQuery] = useState('')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
 
   // 从 API 加载笔记
   const loadNotes = useCallback(async (query?: string) => {
@@ -38,6 +40,7 @@ function App() {
   // 创建新笔记
   const handleCreateNote = async () => {
     try {
+      setError(null)
       const newNote = await api.createNote({
         id: Date.now().toString(),
         title: '新笔记',
@@ -47,7 +50,8 @@ function App() {
       setSelectedNoteId(newNote.id)
     } catch (err) {
       console.error('创建笔记失败:', err)
-      setError('创建笔记失败，请重试')
+      const errorMessage = err instanceof Error ? err.message : '创建笔记失败，请重试'
+      setError(errorMessage)
     }
   }
 
@@ -87,6 +91,13 @@ function App() {
   const filteredNotes = notes
 
   const selectedNote = notes.find(note => note.id === selectedNoteId)
+
+  // 如果未认证，显示密码保护
+  if (!isAuthenticated) {
+    return (
+      <PasswordProtection onPasswordCorrect={() => setIsAuthenticated(true)} />
+    )
+  }
 
   return (
     <div className="app">

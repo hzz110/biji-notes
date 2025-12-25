@@ -27,7 +27,8 @@ function NoteList({ notes, selectedNoteId, onSelectNote, onDeleteNote }: NoteLis
   }
 
   const getPreview = (content: string) => {
-    const text = content.replace(/\n/g, ' ').trim()
+    // 移除 HTML 标签
+    const text = content.replace(/<[^>]*>/g, '').replace(/\n/g, ' ').trim()
     return text.length > 50 ? text.substring(0, 50) + '...' : text || '无内容'
   }
 

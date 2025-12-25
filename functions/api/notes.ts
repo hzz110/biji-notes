@@ -63,6 +63,22 @@ export async function onRequestGet(context: { env: Env; request: Request }): Pro
 export async function onRequestPost(context: { env: Env; request: Request }): Promise<Response> {
   try {
     const { env, request } = context;
+    
+    // 检查数据库绑定
+    if (!env.DB) {
+      console.error('数据库未绑定: env.DB 不存在');
+      return new Response(JSON.stringify({ 
+        error: '数据库未配置，请在 Cloudflare Dashboard 中绑定 D1 数据库',
+        details: '请检查 Pages 项目设置 > Functions > D1 database bindings'
+      }), {
+        status: 500,
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+        },
+      });
+    }
+
     const body = await request.json() as Partial<Note>;
 
     const id = body.id || Date.now().toString();
@@ -70,9 +86,23 @@ export async function onRequestPost(context: { env: Env; request: Request }): Pr
     const content = body.content || '';
     const now = new Date().toISOString();
 
-    await env.DB.prepare(
+    const result = await env.DB.prepare(
       'INSERT INTO notes (id, title, content, created_at, updated_at) VALUES (?, ?, ?, ?, ?)'
     ).bind(id, title, content, now, now).run();
+
+    if (!result.success) {
+      console.error('数据库插入失败:', result);
+      return new Response(JSON.stringify({ 
+        error: '数据库操作失败',
+        details: result.error || '未知错误'
+      }), {
+        status: 500,
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+        },
+      });
+    }
 
     const note = {
       id,
@@ -93,7 +123,11 @@ export async function onRequestPost(context: { env: Env; request: Request }): Pr
     });
   } catch (error) {
     console.error('创建笔记失败:', error);
-    return new Response(JSON.stringify({ error: '创建笔记失败' }), {
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    return new Response(JSON.stringify({ 
+      error: '创建笔记失败',
+      details: errorMessage
+    }), {
       status: 500,
       headers: {
         'Content-Type': 'application/json',

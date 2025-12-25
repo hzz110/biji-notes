@@ -24,19 +24,29 @@ export async function fetchNotes(query?: string): Promise<Note[]> {
 
 // 创建新笔记
 export async function createNote(note: Partial<Note>): Promise<Note> {
-  const response = await fetch(API_BASE, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(note),
-  });
-  
-  if (!response.ok) {
-    throw new Error('创建笔记失败');
+  try {
+    const response = await fetch(API_BASE, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(note),
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      const errorMessage = errorData.error || `创建笔记失败 (${response.status})`;
+      console.error('API 错误:', errorMessage, response.status);
+      throw new Error(errorMessage);
+    }
+    
+    return response.json();
+  } catch (error) {
+    if (error instanceof Error) {
+      throw error;
+    }
+    throw new Error('网络错误，请检查连接');
   }
-  
-  return response.json();
 }
 
 // 更新笔记

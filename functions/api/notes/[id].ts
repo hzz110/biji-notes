@@ -12,6 +12,20 @@ export async function onRequestPut(
 ): Promise<Response> {
   try {
     const { env, request, params } = context;
+    
+    // 检查数据库绑定
+    if (!env.DB) {
+      return new Response(JSON.stringify({ 
+        error: '数据库未配置，请在 Cloudflare Dashboard 中绑定 D1 数据库'
+      }), {
+        status: 500,
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+        },
+      });
+    }
+    
     const { id } = params;
     const body = await request.json() as Partial<{ title: string; content: string }>;
 
@@ -99,6 +113,20 @@ export async function onRequestDelete(
 ): Promise<Response> {
   try {
     const { env, params } = context;
+    
+    // 检查数据库绑定
+    if (!env.DB) {
+      return new Response(JSON.stringify({ 
+        error: '数据库未配置，请在 Cloudflare Dashboard 中绑定 D1 数据库'
+      }), {
+        status: 500,
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+        },
+      });
+    }
+    
     const { id } = params;
 
     const result = await env.DB.prepare('DELETE FROM notes WHERE id = ?').bind(id).run();

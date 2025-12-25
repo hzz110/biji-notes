@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Note } from '../types'
+import RichTextEditor from './RichTextEditor'
 import './NoteEditor.css'
 
 interface NoteEditorProps {
@@ -14,7 +15,8 @@ function NoteEditor({ note, onUpdateNote }: NoteEditorProps) {
   useEffect(() => {
     if (note) {
       setTitle(note.title)
-      setContent(note.content)
+      // 如果内容是 HTML，直接使用；否则转换为 HTML
+      setContent(note.content || '')
     } else {
       setTitle('')
       setContent('')
@@ -52,10 +54,9 @@ function NoteEditor({ note, onUpdateNote }: NoteEditorProps) {
         onChange={(e) => handleTitleChange(e.target.value)}
         placeholder="笔记标题..."
       />
-      <textarea
-        className="note-content-input"
+      <RichTextEditor
         value={content}
-        onChange={(e) => handleContentChange(e.target.value)}
+        onChange={handleContentChange}
         placeholder="开始记录你的想法..."
       />
       <div className="note-meta">
