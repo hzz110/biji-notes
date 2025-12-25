@@ -57,8 +57,10 @@ function RichTextEditor({ value, onChange, placeholder }: RichTextEditorProps) {
         const quill = quillRef.current?.getEditor()
         if (quill) {
           const range = quill.getSelection(true)
-          quill.insertEmbed(range.index, 'image', imageUrl)
-          quill.setSelection(range.index + 1)
+          if (range) {
+            quill.insertEmbed(range.index, 'image', imageUrl)
+            quill.setSelection(range.index + 1, 0)
+          }
         }
       } catch (error) {
         console.error('图片上传失败:', error)
@@ -103,7 +105,6 @@ function RichTextEditor({ value, onChange, placeholder }: RichTextEditorProps) {
       const matches = text.match(urlRegex)
 
       if (matches) {
-        const delta = quill.getContents()
         let modified = false
 
         matches.forEach((url) => {
