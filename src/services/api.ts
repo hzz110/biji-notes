@@ -1,14 +1,8 @@
 // API 服务 - 处理与后端的所有通信
 
-const API_BASE = '/api/notes';
+import { Note } from '../types'
 
-export interface Note {
-  id: string;
-  title: string;
-  content: string;
-  createdAt: string;
-  updatedAt: string;
-}
+const API_BASE = '/api/notes';
 
 // 获取所有笔记
 export async function fetchNotes(query?: string): Promise<Note[]> {

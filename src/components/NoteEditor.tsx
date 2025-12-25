@@ -16,7 +16,6 @@ function NoteEditor({ note, onUpdateNote, categories, onCategoryChange }: NoteEd
   const [category, setCategory] = useState('默认')
   const [categoryColor, setCategoryColor] = useState('#2196f3')
   const titleInputRef = useRef<HTMLInputElement>(null)
-  const [isTitleFocused, setIsTitleFocused] = useState(false)
 
   useEffect(() => {
     if (note) {
@@ -33,14 +32,9 @@ function NoteEditor({ note, onUpdateNote, categories, onCategoryChange }: NoteEd
   }, [note])
 
   const handleTitleFocus = () => {
-    setIsTitleFocused(true)
     if (title === '新笔记' && titleInputRef.current) {
       titleInputRef.current.select()
     }
-  }
-
-  const handleTitleBlur = () => {
-    setIsTitleFocused(false)
   }
 
   const handleTitleChange = (value: string) => {
