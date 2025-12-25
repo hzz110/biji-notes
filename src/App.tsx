@@ -5,6 +5,7 @@ import PasswordProtection from './components/PasswordProtection'
 import CategoryManager from './components/CategoryManager'
 import { Note } from './types'
 import * as api from './services/api'
+import * as categoryApi from './services/categoryApi'
 import './App.css'
 
 function App() {
@@ -15,11 +16,8 @@ function App() {
   const [error, setError] = useState<string | null>(null)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [showCategoryManager, setShowCategoryManager] = useState(false)
-  
-  // 获取所有分类（从笔记中提取，并添加默认分类）
-  const categories = Array.from(
-    new Set(['默认', ...notes.map(note => note.category || '默认')])
-  ).sort()
+  const [categories, setCategories] = useState<categoryApi.Category[]>([])
+  const [categoriesLoading, setCategoriesLoading] = useState(true)
 
   // 从 API 加载笔记
   const loadNotes = useCallback(async (query?: string) => {
@@ -39,10 +37,26 @@ function App() {
     }
   }, [selectedNoteId])
 
-  // 初始加载和搜索
+  // 加载分类
+  const loadCategories = useCallback(async () => {
+    try {
+      setCategoriesLoading(true)
+      const fetchedCategories = await categoryApi.fetchCategories()
+      setCategories(fetchedCategories)
+    } catch (err) {
+      console.error('加载分类失败:', err)
+      // 如果加载失败，至少保证有默认分类
+      setCategories([{ id: 'default', name: '默认', color: '#2196f3', createdAt: '', updatedAt: '' }])
+    } finally {
+      setCategoriesLoading(false)
+    }
+  }, [])
+
+  // 初始加载
   useEffect(() => {
     loadNotes(searchQuery)
-  }, [searchQuery, loadNotes])
+    loadCategories()
+  }, [searchQuery, loadNotes, loadCategories])
 
   // 创建新笔记
   const handleCreateNote = async () => {
@@ -97,11 +111,17 @@ function App() {
   }
 
   // 添加分类
-  const handleAddCategory = (_categoryName: string) => {
-    // 分类已通过笔记自动提取，这里只是触发重新渲染
-    // 实际分类会在创建笔记时使用
-    // 使用下划线前缀表示参数未使用
-    setShowCategoryManager(false)
+  const handleAddCategory = async (categoryName: string) => {
+    try {
+      setError(null)
+      const newCategory = await categoryApi.createCategory(categoryName)
+      setCategories([...categories, newCategory])
+      setShowCategoryManager(false)
+    } catch (err) {
+      console.error('添加分类失败:', err)
+      const errorMessage = err instanceof Error ? err.message : '添加分类失败，请重试'
+      setError(errorMessage)
+    }
   }
 
   // 删除分类
@@ -132,10 +152,25 @@ function App() {
       } catch (err) {
         console.error('更新笔记分类失败:', err)
         setError('更新笔记分类失败，请重试')
+        return
       }
     }
     
-    setShowCategoryManager(false)
+    // 从数据库中删除分类
+    const categoryToDelete = categories.find(cat => cat.name === categoryName)
+    if (categoryToDelete) {
+      try {
+        await categoryApi.deleteCategory(categoryToDelete.id)
+        setCategories(categories.filter(cat => cat.id !== categoryToDelete.id))
+        setShowCategoryManager(false)
+      } catch (err) {
+        console.error('删除分类失败:', err)
+        const errorMessage = err instanceof Error ? err.message : '删除分类失败，请重试'
+        setError(errorMessage)
+      }
+    } else {
+      setShowCategoryManager(false)
+    }
   }
 
   // 使用搜索查询过滤（后端已处理，这里直接使用 notes）
@@ -191,17 +226,19 @@ function App() {
             selectedNoteId={selectedNoteId}
             onSelectNote={setSelectedNoteId}
             onDeleteNote={handleDeleteNote}
+            categories={categories}
           />
           <NoteEditor
             note={selectedNote}
             onUpdateNote={handleUpdateNote}
-            categories={categories}
+            categories={categories.map(cat => cat.name)}
           />
         </div>
       )}
       {showCategoryManager && (
         <CategoryManager
-          categories={categories}
+          categories={categories.map(cat => cat.name)}
+          categoryData={categories}
           onAddCategory={handleAddCategory}
           onDeleteCategory={handleDeleteCategory}
           onClose={() => setShowCategoryManager(false)}

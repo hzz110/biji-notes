@@ -1,14 +1,21 @@
 import { useState } from 'react'
 import './CategoryManager.css'
 
+interface Category {
+  id: string
+  name: string
+  color: string
+}
+
 interface CategoryManagerProps {
   categories: string[]
+  categoryData?: Category[]
   onAddCategory: (name: string) => void
   onDeleteCategory: (name: string) => void
   onClose: () => void
 }
 
-function CategoryManager({ categories, onAddCategory, onDeleteCategory, onClose }: CategoryManagerProps) {
+function CategoryManager({ categories, categoryData, onAddCategory, onDeleteCategory, onClose }: CategoryManagerProps) {
   const [newCategoryName, setNewCategoryName] = useState('')
 
   const handleAddCategory = () => {
