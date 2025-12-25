@@ -13,6 +13,11 @@ function App() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
+  
+  // 获取所有分类（从笔记中提取）
+  const categories = Array.from(
+    new Set(notes.map(note => note.category || '默认'))
+  ).sort()
 
   // 从 API 加载笔记
   const loadNotes = useCallback(async (query?: string) => {
@@ -45,6 +50,8 @@ function App() {
         id: Date.now().toString(),
         title: '新笔记',
         content: '',
+        category: '默认',
+        categoryColor: '#2196f3',
       })
       setNotes([newNote, ...notes])
       setSelectedNoteId(newNote.id)
@@ -135,6 +142,7 @@ function App() {
           <NoteEditor
             note={selectedNote}
             onUpdateNote={handleUpdateNote}
+            categories={categories}
           />
         </div>
       )}

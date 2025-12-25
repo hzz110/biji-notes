@@ -22,10 +22,12 @@
 }
 
 .note-item {
-  padding: 1rem;
+  display: flex;
+  padding: 0;
   border-bottom: 1px solid #e0e0e0;
   cursor: pointer;
   transition: background-color 0.2s;
+  position: relative;
 }
 
 .note-item:hover {
@@ -34,7 +36,20 @@
 
 .note-item.active {
   background-color: #e3f2fd;
-  border-left: 3px solid #2196f3;
+}
+
+.note-category-indicator {
+  width: 4px;
+  min-height: 100%;
+  border-left: 4px solid #2196f3;
+  flex-shrink: 0;
+}
+
+.note-item-content {
+  flex: 1;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
 }
 
 .note-item-header {

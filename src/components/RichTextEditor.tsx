@@ -1,6 +1,7 @@
-import { useMemo, useRef, useEffect } from 'react'
+import { useMemo, useRef, useEffect, useState } from 'react'
 import ReactQuill from 'react-quill'
 import 'react-quill/dist/quill.snow.css'
+import ImageModal from './ImageModal'
 import './RichTextEditor.css'
 
 interface RichTextEditorProps {
@@ -11,6 +12,7 @@ interface RichTextEditorProps {
 
 function RichTextEditor({ value, onChange, placeholder }: RichTextEditorProps) {
   const quillRef = useRef<ReactQuill>(null)
+  const [selectedImage, setSelectedImage] = useState<string | null>(null)
 
   // 配置图片上传
   const imageHandler = () => {
@@ -93,7 +95,7 @@ function RichTextEditor({ value, onChange, placeholder }: RichTextEditorProps) {
     []
   )
 
-  // URL 自动链接配置
+  // URL 自动链接配置和图片点击事件
   useEffect(() => {
     const quill = quillRef.current?.getEditor()
     if (!quill) return
@@ -127,10 +129,21 @@ function RichTextEditor({ value, onChange, placeholder }: RichTextEditorProps) {
       }
     }
 
+    // 处理图片点击事件
+    const handleImageClick = (e: MouseEvent) => {
+      const target = e.target as HTMLImageElement
+      if (target.tagName === 'IMG' && target.src) {
+        e.preventDefault()
+        setSelectedImage(target.src)
+      }
+    }
+
     quill.on('text-change', handleTextChange)
+    quill.root.addEventListener('click', handleImageClick)
 
     return () => {
       quill.off('text-change', handleTextChange)
+      quill.root.removeEventListener('click', handleImageClick)
     }
   }, [onChange])
 
@@ -150,17 +163,25 @@ function RichTextEditor({ value, onChange, placeholder }: RichTextEditorProps) {
   ]
 
   return (
-    <div className="rich-text-editor">
-      <ReactQuill
-        ref={quillRef}
-        theme="snow"
-        value={value}
-        onChange={onChange}
-        modules={modules}
-        formats={formats}
-        placeholder={placeholder || '开始记录你的想法...'}
-      />
-    </div>
+    <>
+      <div className="rich-text-editor">
+        <ReactQuill
+          ref={quillRef}
+          theme="snow"
+          value={value}
+          onChange={onChange}
+          modules={modules}
+          formats={formats}
+          placeholder={placeholder || '开始记录你的想法...'}
+        />
+      </div>
+      {selectedImage && (
+        <ImageModal
+          imageUrl={selectedImage}
+          onClose={() => setSelectedImage(null)}
+        />
+      )}
+    </>
   )
 }
 

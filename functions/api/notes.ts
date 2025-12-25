@@ -9,6 +9,8 @@ export interface Note {
   id: string;
   title: string;
   content: string;
+  category?: string;
+  category_color?: string;
   created_at: string;
   updated_at: string;
 }
@@ -35,6 +37,8 @@ export async function onRequestGet(context: { env: Env; request: Request }): Pro
       id: note.id,
       title: note.title,
       content: note.content,
+      category: note.category || '默认',
+      categoryColor: note.category_color || '#2196f3',
       createdAt: note.created_at,
       updatedAt: note.updated_at,
     }));
@@ -84,11 +88,13 @@ export async function onRequestPost(context: { env: Env; request: Request }): Pr
     const id = body.id || Date.now().toString();
     const title = body.title || '新笔记';
     const content = body.content || '';
+    const category = body.category || '默认';
+    const categoryColor = body.category_color || '#2196f3';
     const now = new Date().toISOString();
 
     const result = await env.DB.prepare(
-      'INSERT INTO notes (id, title, content, created_at, updated_at) VALUES (?, ?, ?, ?, ?)'
-    ).bind(id, title, content, now, now).run();
+      'INSERT INTO notes (id, title, content, category, category_color, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)'
+    ).bind(id, title, content, category, categoryColor, now, now).run();
 
     if (!result.success) {
       console.error('数据库插入失败:', result);
@@ -108,6 +114,8 @@ export async function onRequestPost(context: { env: Env; request: Request }): Pr
       id,
       title,
       content,
+      category,
+      categoryColor,
       createdAt: now,
       updatedAt: now,
     };

@@ -65,6 +65,12 @@
   height: auto;
   display: block;
   margin: 1rem 0;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.rich-text-editor .ql-editor img:hover {
+  opacity: 0.8;
 }
 
 /* 链接样式 */

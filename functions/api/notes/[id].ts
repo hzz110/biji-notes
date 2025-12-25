@@ -27,7 +27,7 @@ export async function onRequestPut(
     }
     
     const { id } = params;
-    const body = await request.json() as Partial<{ title: string; content: string }>;
+    const body = await request.json() as Partial<{ title: string; content: string; category: string; categoryColor: string }>;
 
     const updates: string[] = [];
     const values: any[] = [];
@@ -40,6 +40,16 @@ export async function onRequestPut(
     if (body.content !== undefined) {
       updates.push('content = ?');
       values.push(body.content);
+    }
+
+    if (body.category !== undefined) {
+      updates.push('category = ?');
+      values.push(body.category);
+    }
+
+    if (body.categoryColor !== undefined) {
+      updates.push('category_color = ?');
+      values.push(body.categoryColor);
     }
 
     if (updates.length === 0) {
@@ -65,6 +75,8 @@ export async function onRequestPut(
       id: string;
       title: string;
       content: string;
+      category?: string;
+      category_color?: string;
       created_at: string;
       updated_at: string;
     }>();
@@ -83,6 +95,8 @@ export async function onRequestPut(
       id: result.id,
       title: result.title,
       content: result.content,
+      category: result.category || '默认',
+      categoryColor: result.category_color || '#2196f3',
       createdAt: result.created_at,
       updatedAt: result.updated_at,
     };

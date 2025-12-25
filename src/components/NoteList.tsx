@@ -41,31 +41,41 @@ function NoteList({ notes, selectedNoteId, onSelectNote, onDeleteNote }: NoteLis
     )
   }
 
+  // 只显示最新的3条笔记
+  const displayNotes = notes.slice(0, 3)
+
   return (
     <div className="note-list">
-      {notes.map(note => (
+      {displayNotes.map(note => (
         <div
           key={note.id}
           className={`note-item ${selectedNoteId === note.id ? 'active' : ''}`}
           onClick={() => onSelectNote(note.id)}
         >
-          <div className="note-item-header">
-            <h3 className="note-title">{note.title}</h3>
-            <button
-              className="delete-btn"
-              onClick={(e) => {
-                e.stopPropagation()
-                if (confirm('确定要删除这条笔记吗？')) {
-                  onDeleteNote(note.id)
-                }
-              }}
-              title="删除笔记"
-            >
-              ×
-            </button>
+          <div
+            className="note-category-indicator"
+            style={{ borderLeftColor: note.categoryColor || '#2196f3' }}
+            title={note.category || '默认'}
+          />
+          <div className="note-item-content">
+            <div className="note-item-header">
+              <h3 className="note-title">{note.title}</h3>
+              <button
+                className="delete-btn"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  if (confirm('确定要删除这条笔记吗？')) {
+                    onDeleteNote(note.id)
+                  }
+                }}
+                title="删除笔记"
+              >
+                ×
+              </button>
+            </div>
+            <p className="note-preview">{getPreview(note.content)}</p>
+            <span className="note-date">{formatDate(note.updatedAt)}</span>
           </div>
-          <p className="note-preview">{getPreview(note.content)}</p>
-          <span className="note-date">{formatDate(note.updatedAt)}</span>
         </div>
       ))}
     </div>
