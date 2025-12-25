@@ -78,12 +78,6 @@ function NoteList({ notes, selectedNoteId, onSelectNote, onDeleteNote, categorie
     <div className="note-list">
       {notesByCategory.map(({ category, notes: categoryNotes, color }) => (
         <div key={category} className="category-group">
-          <div
-            className="category-header"
-            style={{ borderLeftColor: color }}
-          >
-            <span className="category-name">{category}</span>
-          </div>
           {categoryNotes.map(note => (
             <div
               key={note.id}
@@ -91,9 +85,14 @@ function NoteList({ notes, selectedNoteId, onSelectNote, onDeleteNote, categorie
               onClick={() => onSelectNote(note.id)}
             >
               <div
-                className="note-category-indicator"
-                style={{ borderLeftColor: note.categoryColor || '#2196f3' }}
-              />
+                className="note-category-label"
+                style={{ 
+                  borderLeftColor: color,
+                  backgroundColor: color + '20'
+                }}
+              >
+                <span className="category-name-text">{category}</span>
+              </div>
               <div className="note-item-content">
                 <div className="note-item-header">
                   <h3 className="note-title">{note.title}</h3>
