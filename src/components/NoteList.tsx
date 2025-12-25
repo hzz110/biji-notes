@@ -1,12 +1,18 @@
 import { Note } from '../types'
 import './NoteList.css'
 
+interface Category {
+  id: string
+  name: string
+  color: string
+}
+
 interface NoteListProps {
   notes: Note[]
   selectedNoteId: string | null
   onSelectNote: (id: string) => void
   onDeleteNote: (id: string) => void
-  categories: string[]
+  categories: Category[]
 }
 
 function NoteList({ notes, selectedNoteId, onSelectNote, onDeleteNote, categories }: NoteListProps) {
@@ -45,15 +51,15 @@ function NoteList({ notes, selectedNoteId, onSelectNote, onDeleteNote, categorie
   // 按分类分组，每个分类显示最新的3条笔记
   const notesByCategory = categories.map(category => {
     const categoryNotes = notes
-      .filter(note => (note.category || '默认') === category)
+      .filter(note => (note.category || '默认') === category.name)
       .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
       .slice(0, 3) // 每个分类最多3条
     
-    // 获取分类颜色（从第一条笔记或默认颜色）
-    const color = categoryNotes[0]?.categoryColor || '#2196f3'
+    // 获取分类颜色（从第一条笔记或分类默认颜色）
+    const color = categoryNotes[0]?.categoryColor || category.color || '#2196f3'
     
     return {
-      category,
+      category: category.name,
       notes: categoryNotes,
       color
     }

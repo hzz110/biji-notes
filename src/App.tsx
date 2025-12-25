@@ -17,7 +17,6 @@ function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [showCategoryManager, setShowCategoryManager] = useState(false)
   const [categories, setCategories] = useState<categoryApi.Category[]>([])
-  const [categoriesLoading, setCategoriesLoading] = useState(true)
 
   // 从 API 加载笔记
   const loadNotes = useCallback(async (query?: string) => {
@@ -40,15 +39,12 @@ function App() {
   // 加载分类
   const loadCategories = useCallback(async () => {
     try {
-      setCategoriesLoading(true)
       const fetchedCategories = await categoryApi.fetchCategories()
       setCategories(fetchedCategories)
     } catch (err) {
       console.error('加载分类失败:', err)
       // 如果加载失败，至少保证有默认分类
       setCategories([{ id: 'default', name: '默认', color: '#2196f3', createdAt: '', updatedAt: '' }])
-    } finally {
-      setCategoriesLoading(false)
     }
   }, [])
 
@@ -238,7 +234,6 @@ function App() {
       {showCategoryManager && (
         <CategoryManager
           categories={categories.map(cat => cat.name)}
-          categoryData={categories}
           onAddCategory={handleAddCategory}
           onDeleteCategory={handleDeleteCategory}
           onClose={() => setShowCategoryManager(false)}
