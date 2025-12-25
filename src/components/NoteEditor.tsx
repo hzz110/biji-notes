@@ -86,7 +86,6 @@ function NoteEditor({ note, onUpdateNote, categories, onCategoryChange }: NoteEd
           value={title}
           onChange={(e) => handleTitleChange(e.target.value)}
           onFocus={handleTitleFocus}
-          onBlur={handleTitleBlur}
           placeholder="笔记标题..."
         />
         <div className="note-category-selector">
