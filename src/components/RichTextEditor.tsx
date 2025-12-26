@@ -1,18 +1,10 @@
 import { useMemo, useRef, useEffect, useState } from 'react'
 import ReactQuill from 'react-quill'
+import Quill from 'quill'
 import BlotFormatter from 'quill-blot-formatter'
 import 'react-quill/dist/quill.snow.css'
 import ImageModal from './ImageModal'
 import './RichTextEditor.css'
-
-// 安全地获取 Quill 对象
-// 注意：在 Vite 生产构建中，Quill 对象可能需要通过不同方式获取
-let Quill: any = null
-try {
-  Quill = ReactQuill.Quill
-} catch (e) {
-  console.warn('Failed to get Quill from ReactQuill directly', e)
-}
 
 // 模块注册状态
 let isModuleRegistered = false
@@ -32,63 +24,51 @@ function RichTextEditor({ value, onChange, placeholder }: RichTextEditorProps) {
     // 在组件挂载后注册模块
     if (!isModuleRegistered) {
       try {
-        // 再次尝试获取 Quill（如果顶层获取失败）
-        if (!Quill && (ReactQuill as any)?.default?.Quill) {
-          Quill = (ReactQuill as any).default.Quill
-        }
-        
-        if (!Quill) {
-          // 最后的尝试：从 quill 包导入（如果环境允许）
-          // 但通常 ReactQuill 应该已经带了。
-          // 这里如果还是拿不到，就只能报错了
-          console.error('Quill object not found, skipping module registration')
-          setIsReady(true)
-          return
-        }
-
         const BaseImage = Quill.import('formats/image')
-        class ImageBlot extends BaseImage {
-          static create(value: any) {
-            const node = super.create(value)
-            if (typeof value === 'string') {
-              node.setAttribute('src', value)
+        // 确保 BaseImage 存在，否则不进行继承，避免报错
+        if (BaseImage) {
+            class ImageBlot extends BaseImage {
+            static create(value: any) {
+                const node = super.create(value)
+                if (typeof value === 'string') {
+                node.setAttribute('src', value)
+                }
+                return node
             }
-            return node
-          }
 
-          static formats(node: HTMLElement) {
-            const formats: any = {}
-            if (node.hasAttribute('width')) formats.width = node.getAttribute('width')
-            if (node.hasAttribute('height')) formats.height = node.getAttribute('height')
-            if (node.hasAttribute('style')) formats.style = node.getAttribute('style')
-            return formats
-          }
-
-          format(name: string, value: any) {
-            if (name === 'width' || name === 'height') {
-              if (value) {
-                this.domNode.setAttribute(name, value)
-              } else {
-                this.domNode.removeAttribute(name)
-              }
-            } else if (name === 'style') {
-              if (value) {
-                this.domNode.setAttribute(name, value)
-              } else {
-                this.domNode.removeAttribute(name)
-              }
-            } else {
-              super.format(name, value)
+            static formats(node: HTMLElement) {
+                const formats: any = {}
+                if (node.hasAttribute('width')) formats.width = node.getAttribute('width')
+                if (node.hasAttribute('height')) formats.height = node.getAttribute('height')
+                if (node.hasAttribute('style')) formats.style = node.getAttribute('style')
+                return formats
             }
-          }
+
+            format(name: string, value: any) {
+                if (name === 'width' || name === 'height') {
+                if (value) {
+                    this.domNode.setAttribute(name, value)
+                } else {
+                    this.domNode.removeAttribute(name)
+                }
+                } else if (name === 'style') {
+                if (value) {
+                    this.domNode.setAttribute(name, value)
+                } else {
+                    this.domNode.removeAttribute(name)
+                }
+                } else {
+                super.format(name, value)
+                }
+            }
+            }
+            
+            // 注册自定义格式和模块
+            Quill.register('formats/image', ImageBlot, true)
+        } else {
+            console.error('BaseImage format not found in Quill')
         }
         
-        // 注册自定义格式和模块
-        // 先检查是否已经注册，避免重复注册报错
-        const formats = Quill.imports['formats/image']
-        if (formats !== ImageBlot) {
-             Quill.register('formats/image', ImageBlot, true)
-        }
         Quill.register('modules/blotFormatter', BlotFormatter)
         
         isModuleRegistered = true
@@ -98,6 +78,7 @@ function RichTextEditor({ value, onChange, placeholder }: RichTextEditorProps) {
     }
     setIsReady(true)
   }, [])
+
 
   // 如果还没准备好，可以渲染一个加载状态或者 null
   if (!isReady) {
