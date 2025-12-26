@@ -32,8 +32,14 @@ function NoteEditor({ note, onUpdateNote, categories, onCategoryChange }: NoteEd
   }, [note])
 
   const handleTitleFocus = () => {
-    if (title === '新笔记' && titleInputRef.current) {
-      titleInputRef.current.select()
+    if (title === '新笔记') {
+      setTitle('')
+    }
+  }
+
+  const handleTitleBlur = () => {
+    if (title.trim() === '') {
+      setTitle('新笔记')
     }
   }
 
