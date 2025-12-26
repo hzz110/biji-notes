@@ -1,11 +1,11 @@
 import { useMemo, useRef, useEffect, useState } from 'react'
-import ReactQuill from 'react-quill'
+import ReactQuill, { Quill } from 'react-quill'
 import BlotFormatter from 'quill-blot-formatter'
 import 'react-quill/dist/quill.snow.css'
 import ImageModal from './ImageModal'
 import './RichTextEditor.css'
 
-ReactQuill.Quill.register('modules/blotFormatter', BlotFormatter)
+Quill.register('modules/blotFormatter', BlotFormatter)
 
 interface RichTextEditorProps {
   value: string
