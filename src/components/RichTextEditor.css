@@ -69,8 +69,13 @@
   transition: opacity 0.2s;
 }
 
+/* 覆盖 image-resize 模块的样式，确保缩放手柄可见 */
+.rich-text-editor .ql-container img {
+    cursor: pointer;
+}
+
 .rich-text-editor .ql-editor img:hover {
-  opacity: 0.8;
+  box-shadow: 0 0 0 2px #2196f3;
 }
 
 /* 链接样式 */
