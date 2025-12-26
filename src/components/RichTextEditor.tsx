@@ -1,6 +1,6 @@
 import { useMemo, useRef, useEffect, useState } from 'react'
-import ReactQuill from 'react-quill'
-import Quill from 'quill'
+import ReactQuill, { Quill } from 'react-quill'
+// import Quill from 'quill' // 移除直接导入，使用 react-quill 导出的 Quill
 import BlotFormatter from 'quill-blot-formatter'
 import 'react-quill/dist/quill.snow.css'
 import ImageModal from './ImageModal'
@@ -24,51 +24,9 @@ function RichTextEditor({ value, onChange, placeholder }: RichTextEditorProps) {
     // 在组件挂载后注册模块
     if (!isModuleRegistered) {
       try {
-        const BaseImage = Quill.import('formats/image')
-        // 确保 BaseImage 存在，否则不进行继承，避免报错
-        if (BaseImage) {
-            class ImageBlot extends BaseImage {
-            static create(value: any) {
-                const node = super.create(value)
-                if (typeof value === 'string') {
-                node.setAttribute('src', value)
-                }
-                return node
-            }
-
-            static formats(node: HTMLElement) {
-                const formats: any = {}
-                if (node.hasAttribute('width')) formats.width = node.getAttribute('width')
-                if (node.hasAttribute('height')) formats.height = node.getAttribute('height')
-                if (node.hasAttribute('style')) formats.style = node.getAttribute('style')
-                return formats
-            }
-
-            format(name: string, value: any) {
-                if (name === 'width' || name === 'height') {
-                if (value) {
-                    this.domNode.setAttribute(name, value)
-                } else {
-                    this.domNode.removeAttribute(name)
-                }
-                } else if (name === 'style') {
-                if (value) {
-                    this.domNode.setAttribute(name, value)
-                } else {
-                    this.domNode.removeAttribute(name)
-                }
-                } else {
-                super.format(name, value)
-                }
-            }
-            }
-            
-            // 注册自定义格式和模块
-            Quill.register('formats/image', ImageBlot, true)
-        } else {
-            console.error('BaseImage format not found in Quill')
-        }
-        
+        // 尝试注册 BlotFormatter
+        // 注意：这里我们暂时移除自定义 ImageBlot 的注册，因为它可能导致 BaseImage 为 undefined 的错误
+        // quill-blot-formatter 本身应该能处理基本的缩放
         Quill.register('modules/blotFormatter', BlotFormatter)
         
         isModuleRegistered = true
