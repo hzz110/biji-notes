@@ -1,11 +1,11 @@
 import { useMemo, useRef, useEffect, useState } from 'react'
 import ReactQuill from 'react-quill'
-import ImageResize from 'quill-image-resize-module-react'
+import BlotFormatter from 'quill-blot-formatter'
 import 'react-quill/dist/quill.snow.css'
 import ImageModal from './ImageModal'
 import './RichTextEditor.css'
 
-ReactQuill.Quill.register('modules/imageResize', ImageResize)
+ReactQuill.Quill.register('modules/blotFormatter', BlotFormatter)
 
 interface RichTextEditorProps {
   value: string
@@ -94,10 +94,7 @@ function RichTextEditor({ value, onChange, placeholder }: RichTextEditorProps) {
       clipboard: {
         matchVisual: false,
       },
-      imageResize: {
-        parchment: ReactQuill.Quill.import('parchment'),
-        modules: ['Resize', 'DisplaySize']
-      }
+      blotFormatter: {}
     }),
     []
   )
