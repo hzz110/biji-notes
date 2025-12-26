@@ -6,7 +6,10 @@ import ImageModal from './ImageModal'
 import './RichTextEditor.css'
 
 // 安全地获取 Quill 对象
-const Quill = (ReactQuill as any).Quill || ReactQuill
+let Quill = ReactQuill.Quill
+if (!Quill && (ReactQuill as any).default) {
+  Quill = (ReactQuill as any).default.Quill
+}
 
 // 注册自定义 Image Blot 以支持 resizing 样式
 // 使用 try-catch 防止注册失败导致白屏
