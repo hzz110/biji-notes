@@ -1,7 +1,7 @@
 import { useMemo, useRef, useEffect, useState } from 'react'
 import ReactQuill, { Quill } from 'react-quill'
 // import Quill from 'quill' // 移除直接导入，使用 react-quill 导出的 Quill
-import BlotFormatter from 'quill-blot-formatter'
+// import BlotFormatter from 'quill-blot-formatter'
 import 'react-quill/dist/quill.snow.css'
 import ImageModal from './ImageModal'
 import './RichTextEditor.css'
@@ -22,20 +22,34 @@ function RichTextEditor({ value, onChange, placeholder }: RichTextEditorProps) {
 
   useEffect(() => {
     // 在组件挂载后注册模块
-    if (!isModuleRegistered) {
-      try {
-        // 尝试注册 BlotFormatter
-        // 注意：这里我们暂时移除自定义 ImageBlot 的注册，因为它可能导致 BaseImage 为 undefined 的错误
-        // quill-blot-formatter 本身应该能处理基本的缩放
-        Quill.register('modules/blotFormatter', BlotFormatter)
-        
-        isModuleRegistered = true
-      } catch (error) {
-        console.error('Error registering Quill modules:', error)
-      }
+    const register = async () => {
+        if (!isModuleRegistered) {
+        try {
+            console.log('Registering modules...', { Quill })
+            if (!Quill) {
+                console.error('Quill object is not available from react-quill')
+                return
+            }
+
+            // 动态导入 quill-blot-formatter 以避免加载时的继承错误
+            const module = await import('quill-blot-formatter')
+            const BlotFormatter = module.default || module
+
+            // 尝试注册 BlotFormatter
+            Quill.register('modules/blotFormatter', BlotFormatter)
+            
+            isModuleRegistered = true
+            console.log('Modules registered successfully')
+        } catch (error) {
+            console.error('Error registering Quill modules:', error)
+        }
+        }
+        setIsReady(true)
     }
-    setIsReady(true)
+    
+    register()
   }, [])
+
 
 
   // 如果还没准备好，可以渲染一个加载状态或者 null
