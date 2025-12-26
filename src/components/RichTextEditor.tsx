@@ -133,8 +133,8 @@ function RichTextEditor({ value, onChange, placeholder }: RichTextEditorProps) {
       }
     }
 
-    // 处理图片点击事件
-    const handleImageClick = (e: MouseEvent) => {
+    // 处理图片点击事件（改为双击查看大图，单击用于选中缩放）
+    const handleImageDoubleClick = (e: MouseEvent) => {
       const target = e.target as HTMLImageElement
       if (target.tagName === 'IMG' && target.src) {
         e.preventDefault()
@@ -143,11 +143,11 @@ function RichTextEditor({ value, onChange, placeholder }: RichTextEditorProps) {
     }
 
     quill.on('text-change', handleTextChange)
-    quill.root.addEventListener('click', handleImageClick)
+    quill.root.addEventListener('dblclick', handleImageDoubleClick)
 
     return () => {
       quill.off('text-change', handleTextChange)
-      quill.root.removeEventListener('click', handleImageClick)
+      quill.root.removeEventListener('dblclick', handleImageDoubleClick)
     }
   }, [onChange])
 
