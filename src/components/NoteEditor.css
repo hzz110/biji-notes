@@ -28,17 +28,12 @@
   border-bottom: 1px solid #e0e0e0;
   padding: 1rem 1.5rem;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  align-items: center;
   gap: 1rem;
 }
 
-.note-editor-title-row {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  width: 100%;
-  position: relative; /* 确保定位参考 */
-}
+/* .note-editor-title-row removed */
 
 .fullscreen-button {
   background-color: #f5f5f5;
@@ -54,6 +49,7 @@
   transition: all 0.2s;
   white-space: nowrap;
   font-size: 0.9rem;
+  flex-shrink: 0;
 }
 
 .fullscreen-button:hover {
@@ -81,6 +77,7 @@
   display: flex;
   align-items: center;
   gap: 0.75rem;
+  flex-shrink: 0;
 }
 
 .note-category-selector label {
