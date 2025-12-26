@@ -17,8 +17,10 @@ function NoteEditor({ note, onUpdateNote, categories, onCategoryChange }: NoteEd
   const [categoryColor, setCategoryColor] = useState('#2196f3')
   const [isFullScreen, setIsFullScreen] = useState(false)
   const titleInputRef = useRef<HTMLInputElement>(null)
+  const isComposing = useRef(false)
 
   useEffect(() => {
+    if (isComposing.current) return
     if (note) {
       setTitle(note.title)
       setContent(note.content || '')
@@ -46,9 +48,18 @@ function NoteEditor({ note, onUpdateNote, categories, onCategoryChange }: NoteEd
 
   const handleTitleChange = (value: string) => {
     setTitle(value)
-    if (note) {
+    if (!isComposing.current && note) {
       onUpdateNote(note.id, { title: value })
     }
+  }
+
+  const handleCompositionStart = () => {
+    isComposing.current = true
+  }
+
+  const handleCompositionEnd = (e: React.CompositionEvent<HTMLInputElement>) => {
+    isComposing.current = false
+    handleTitleChange(e.currentTarget.value)
   }
 
   const handleCategoryChange = (newCategory: string) => {
@@ -99,6 +110,8 @@ function NoteEditor({ note, onUpdateNote, categories, onCategoryChange }: NoteEd
           onFocus={handleTitleFocus}
           onBlur={handleTitleBlur}
           placeholder="笔记标题..."
+          onCompositionStart={handleCompositionStart}
+          onCompositionEnd={handleCompositionEnd}
         />
         <div className="note-category-selector">
           <label>分类：</label>
