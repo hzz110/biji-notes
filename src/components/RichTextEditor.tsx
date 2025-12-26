@@ -91,6 +91,10 @@ function RichTextEditor({ value, onChange, placeholder }: RichTextEditorProps) {
       clipboard: {
         matchVisual: false,
       },
+      imageResize: {
+        parchment: Quill.import('parchment'),
+        modules: ['Resize', 'DisplaySize']
+      }
     }),
     []
   )
