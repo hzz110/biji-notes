@@ -1,13 +1,8 @@
 import { useMemo, useRef, useEffect, useState } from 'react'
-import ReactQuill, { Quill } from 'react-quill'
-// import Quill from 'quill' // 移除直接导入，使用 react-quill 导出的 Quill
-// import BlotFormatter from 'quill-blot-formatter'
+import ReactQuill from 'react-quill'
 import 'react-quill/dist/quill.snow.css'
 import ImageModal from './ImageModal'
 import './RichTextEditor.css'
-
-// 模块注册状态
-let isModuleRegistered = false
 
 interface RichTextEditorProps {
   value: string
@@ -17,46 +12,7 @@ interface RichTextEditorProps {
 
 function RichTextEditor({ value, onChange, placeholder }: RichTextEditorProps) {
   const quillRef = useRef<ReactQuill>(null)
-  const [isReady, setIsReady] = useState(false)
   const [selectedImage, setSelectedImage] = useState<string | null>(null)
-
-  useEffect(() => {
-    // 在组件挂载后注册模块
-    const register = async () => {
-        if (!isModuleRegistered) {
-        try {
-            console.log('Registering modules...', { Quill })
-            if (!Quill) {
-                console.error('Quill object is not available from react-quill')
-                return
-            }
-
-            // 动态导入 quill-blot-formatter 以避免加载时的继承错误
-            const module = await import('quill-blot-formatter')
-            const BlotFormatter = module.default || module
-
-            // 尝试注册 BlotFormatter
-            Quill.register('modules/blotFormatter', BlotFormatter)
-            
-            isModuleRegistered = true
-            console.log('Modules registered successfully')
-        } catch (error) {
-            console.error('Error registering Quill modules:', error)
-        }
-        }
-        setIsReady(true)
-    }
-    
-    register()
-  }, [])
-
-
-
-  // 如果还没准备好，可以渲染一个加载状态或者 null
-  if (!isReady) {
-    return <div className="rich-text-editor-loading">Loading editor...</div>
-  }
-
 
   // 配置图片上传
   const imageHandler = () => {
@@ -115,36 +71,25 @@ function RichTextEditor({ value, onChange, placeholder }: RichTextEditorProps) {
     }
   }
 
-  // 配置工具栏
-  const modules = useMemo(
-    () => ({
-      toolbar: {
-        container: [
-          [{ header: [1, 2, 3, false] }],
-          ['bold', 'italic', 'underline', 'strike'],
-          [{ list: 'ordered' }, { list: 'bullet' }],
-          [{ color: [] }, { background: [] }],
-          [{ align: [] }],
-          ['link', 'image'],
-          ['clean'],
-        ],
-        handlers: {
-          image: imageHandler,
-        },
-      },
-      clipboard: {
-        matchVisual: false,
-      },
-      blotFormatter: {
-        overlay: {
-          style: {
-            border: '2px solid #2196f3',
-          }
-        }
+  // 配置 Quill 模块
+  const modules = useMemo(() => ({
+    toolbar: {
+      container: [
+        [{ 'header': [1, 2, 3, false] }],
+        ['bold', 'italic', 'underline', 'strike'],
+        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+        [{ 'color': [] }, { 'background': [] }],
+        ['link', 'image'],
+        ['clean']
+      ],
+      handlers: {
+        image: imageHandler
       }
-    }),
-    []
-  )
+    },
+    clipboard: {
+      matchVisual: false
+    }
+  }), [])
 
   // URL 自动链接配置和图片点击事件
   useEffect(() => {
