@@ -11,50 +11,62 @@ if (!Quill && (ReactQuill as any).default) {
   Quill = (ReactQuill as any).default.Quill
 }
 
-// 注册自定义 Image Blot 以支持 resizing 样式
-// 使用 try-catch 防止注册失败导致白屏
-try {
-  const BaseImage = Quill.import('formats/image')
-  class ImageBlot extends BaseImage {
-    static create(value: any) {
-      const node = super.create(value)
-      if (typeof value === 'string') {
-        node.setAttribute('src', value)
-      }
-      return node
-    }
+// 确保在组件挂载前注册模块
+let isModuleRegistered = false
 
-    static formats(node: HTMLElement) {
-      const formats: any = {}
-      if (node.hasAttribute('width')) formats.width = node.getAttribute('width')
-      if (node.hasAttribute('height')) formats.height = node.getAttribute('height')
-      if (node.hasAttribute('style')) formats.style = node.getAttribute('style')
-      return formats
-    }
+// 尝试注册模块
+const registerModules = () => {
+  if (isModuleRegistered) return
+  
+  try {
+    if (!Quill) return
 
-    format(name: string, value: any) {
-      if (name === 'width' || name === 'height') {
-        if (value) {
-          this.domNode.setAttribute(name, value)
-        } else {
-          this.domNode.removeAttribute(name)
+    const BaseImage = Quill.import('formats/image')
+    class ImageBlot extends BaseImage {
+      static create(value: any) {
+        const node = super.create(value)
+        if (typeof value === 'string') {
+          node.setAttribute('src', value)
         }
-      } else if (name === 'style') {
-        if (value) {
-          this.domNode.setAttribute(name, value)
+        return node
+      }
+
+      static formats(node: HTMLElement) {
+        const formats: any = {}
+        if (node.hasAttribute('width')) formats.width = node.getAttribute('width')
+        if (node.hasAttribute('height')) formats.height = node.getAttribute('height')
+        if (node.hasAttribute('style')) formats.style = node.getAttribute('style')
+        return formats
+      }
+
+      format(name: string, value: any) {
+        if (name === 'width' || name === 'height') {
+          if (value) {
+            this.domNode.setAttribute(name, value)
+          } else {
+            this.domNode.removeAttribute(name)
+          }
+        } else if (name === 'style') {
+          if (value) {
+            this.domNode.setAttribute(name, value)
+          } else {
+            this.domNode.removeAttribute(name)
+          }
         } else {
-          this.domNode.removeAttribute(name)
+          super.format(name, value)
         }
-      } else {
-        super.format(name, value)
       }
     }
+    Quill.register('formats/image', ImageBlot, true)
+    Quill.register('modules/blotFormatter', BlotFormatter)
+    isModuleRegistered = true
+  } catch (error) {
+    console.error('Error registering Quill modules:', error)
   }
-  Quill.register('formats/image', ImageBlot, true)
-  Quill.register('modules/blotFormatter', BlotFormatter)
-} catch (error) {
-  console.error('Error registering Quill modules:', error)
 }
+
+// 执行注册
+registerModules()
 
 interface RichTextEditorProps {
   value: string
