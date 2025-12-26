@@ -18,19 +18,23 @@ function NoteEditor({ note, onUpdateNote, categories, onCategoryChange }: NoteEd
   const [isFullScreen, setIsFullScreen] = useState(false)
   const titleInputRef = useRef<HTMLInputElement>(null)
   const isComposing = useRef(false)
+  const lastNoteIdRef = useRef<string | undefined>(undefined)
 
   useEffect(() => {
-    if (isComposing.current) return
-    if (note) {
-      setTitle(note.title)
-      setContent(note.content || '')
-      setCategory(note.category || '默认')
-      setCategoryColor(note.categoryColor || '#2196f3')
-    } else {
-      setTitle('新笔记')
-      setContent('')
-      setCategory('默认')
-      setCategoryColor('#2196f3')
+    // 只有当笔记ID变化时才更新状态，避免输入时的循环更新问题
+    if (note?.id !== lastNoteIdRef.current) {
+      lastNoteIdRef.current = note?.id
+      if (note) {
+        setTitle(note.title)
+        setContent(note.content || '')
+        setCategory(note.category || '默认')
+        setCategoryColor(note.categoryColor || '#2196f3')
+      } else {
+        setTitle('新笔记')
+        setContent('')
+        setCategory('默认')
+        setCategoryColor('#2196f3')
+      }
     }
   }, [note])
 
