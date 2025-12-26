@@ -6,67 +6,16 @@ import ImageModal from './ImageModal'
 import './RichTextEditor.css'
 
 // 安全地获取 Quill 对象
-let Quill = ReactQuill.Quill
-if (!Quill && (ReactQuill as any).default) {
-  Quill = (ReactQuill as any).default.Quill
+// 注意：在 Vite 生产构建中，Quill 对象可能需要通过不同方式获取
+let Quill: any = null
+try {
+  Quill = ReactQuill.Quill
+} catch (e) {
+  console.warn('Failed to get Quill from ReactQuill directly', e)
 }
 
-// 确保在组件挂载前注册模块
+// 模块注册状态
 let isModuleRegistered = false
-
-// 尝试注册模块
-const registerModules = () => {
-  if (isModuleRegistered) return
-  
-  try {
-    if (!Quill) return
-
-    const BaseImage = Quill.import('formats/image')
-    class ImageBlot extends BaseImage {
-      static create(value: any) {
-        const node = super.create(value)
-        if (typeof value === 'string') {
-          node.setAttribute('src', value)
-        }
-        return node
-      }
-
-      static formats(node: HTMLElement) {
-        const formats: any = {}
-        if (node.hasAttribute('width')) formats.width = node.getAttribute('width')
-        if (node.hasAttribute('height')) formats.height = node.getAttribute('height')
-        if (node.hasAttribute('style')) formats.style = node.getAttribute('style')
-        return formats
-      }
-
-      format(name: string, value: any) {
-        if (name === 'width' || name === 'height') {
-          if (value) {
-            this.domNode.setAttribute(name, value)
-          } else {
-            this.domNode.removeAttribute(name)
-          }
-        } else if (name === 'style') {
-          if (value) {
-            this.domNode.setAttribute(name, value)
-          } else {
-            this.domNode.removeAttribute(name)
-          }
-        } else {
-          super.format(name, value)
-        }
-      }
-    }
-    Quill.register('formats/image', ImageBlot, true)
-    Quill.register('modules/blotFormatter', BlotFormatter)
-    isModuleRegistered = true
-  } catch (error) {
-    console.error('Error registering Quill modules:', error)
-  }
-}
-
-// 执行注册
-registerModules()
 
 interface RichTextEditorProps {
   value: string
@@ -76,7 +25,85 @@ interface RichTextEditorProps {
 
 function RichTextEditor({ value, onChange, placeholder }: RichTextEditorProps) {
   const quillRef = useRef<ReactQuill>(null)
+  const [isReady, setIsReady] = useState(false)
   const [selectedImage, setSelectedImage] = useState<string | null>(null)
+
+  useEffect(() => {
+    // 在组件挂载后注册模块
+    if (!isModuleRegistered) {
+      try {
+        // 再次尝试获取 Quill（如果顶层获取失败）
+        if (!Quill && (ReactQuill as any)?.default?.Quill) {
+          Quill = (ReactQuill as any).default.Quill
+        }
+        
+        if (!Quill) {
+          // 最后的尝试：从 quill 包导入（如果环境允许）
+          // 但通常 ReactQuill 应该已经带了。
+          // 这里如果还是拿不到，就只能报错了
+          console.error('Quill object not found, skipping module registration')
+          setIsReady(true)
+          return
+        }
+
+        const BaseImage = Quill.import('formats/image')
+        class ImageBlot extends BaseImage {
+          static create(value: any) {
+            const node = super.create(value)
+            if (typeof value === 'string') {
+              node.setAttribute('src', value)
+            }
+            return node
+          }
+
+          static formats(node: HTMLElement) {
+            const formats: any = {}
+            if (node.hasAttribute('width')) formats.width = node.getAttribute('width')
+            if (node.hasAttribute('height')) formats.height = node.getAttribute('height')
+            if (node.hasAttribute('style')) formats.style = node.getAttribute('style')
+            return formats
+          }
+
+          format(name: string, value: any) {
+            if (name === 'width' || name === 'height') {
+              if (value) {
+                this.domNode.setAttribute(name, value)
+              } else {
+                this.domNode.removeAttribute(name)
+              }
+            } else if (name === 'style') {
+              if (value) {
+                this.domNode.setAttribute(name, value)
+              } else {
+                this.domNode.removeAttribute(name)
+              }
+            } else {
+              super.format(name, value)
+            }
+          }
+        }
+        
+        // 注册自定义格式和模块
+        // 先检查是否已经注册，避免重复注册报错
+        const formats = Quill.imports['formats/image']
+        if (formats !== ImageBlot) {
+             Quill.register('formats/image', ImageBlot, true)
+        }
+        Quill.register('modules/blotFormatter', BlotFormatter)
+        
+        isModuleRegistered = true
+      } catch (error) {
+        console.error('Error registering Quill modules:', error)
+      }
+    }
+    setIsReady(true)
+  }, [])
+
+  // 如果还没准备好，可以渲染一个加载状态或者 null
+  if (!isReady) {
+    return <div className="rich-text-editor-loading">Loading editor...</div>
+  }
+
 
   // 配置图片上传
   const imageHandler = () => {
