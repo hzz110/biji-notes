@@ -37,28 +37,34 @@
   align-items: center;
   gap: 1rem;
   width: 100%;
+  position: relative; /* 确保定位参考 */
 }
 
 .fullscreen-button {
-  background: none;
-  border: none;
+  background-color: #f5f5f5;
+  border: 1px solid #e0e0e0;
   cursor: pointer;
-  padding: 0.5rem;
+  padding: 0.5rem 1rem;
   border-radius: 4px;
   color: #666;
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 0.5rem;
   transition: all 0.2s;
+  white-space: nowrap;
+  font-size: 0.9rem;
 }
 
 .fullscreen-button:hover {
-  background-color: #f5f5f5;
+  background-color: #e3f2fd;
   color: #2196f3;
+  border-color: #2196f3;
 }
 
 .note-title-input {
   flex: 1;
+  min-width: 0; /* 防止 flex 子项溢出 */
   padding: 0.5rem 0;
   font-size: 1.5rem;
   font-weight: 600;
