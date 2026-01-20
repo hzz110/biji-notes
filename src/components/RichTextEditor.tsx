@@ -82,18 +82,30 @@ function RichTextEditor({ value, onChange, placeholder }: RichTextEditorProps) {
     if (quill) {
       const range = quill.getSelection(true)
       if (range) {
-        // 格式：标题：链接
-        const textToInsert = title ? `${title}：${url}` : url
-        
         // 删除选中的文本（如果有）
         if (range.length > 0) {
           quill.deleteText(range.index, range.length)
         }
         
-        // 插入链接
-        quill.insertText(range.index, textToInsert, 'link', url)
-        // 移动光标到链接后面，并移除链接格式
-        quill.setSelection(range.index + textToInsert.length, 0)
+        let insertIndex = range.index
+        
+        // 如果有标题，插入标题和冒号（普通文本）
+        if (title) {
+          const titleText = `${title}：`
+          quill.insertText(insertIndex, titleText)
+          insertIndex += titleText.length
+        }
+        
+        // 插入链接（带链接格式）
+        quill.insertText(insertIndex, url, 'link', url)
+        insertIndex += url.length
+
+        // 插入换行符
+        quill.insertText(insertIndex, '\n')
+        insertIndex += 1
+        
+        // 移动光标到最后，并移除链接格式
+        quill.setSelection(insertIndex, 0)
         quill.format('link', false)
       }
     }
