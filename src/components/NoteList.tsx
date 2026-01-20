@@ -53,7 +53,6 @@ function NoteList({ notes, selectedNoteId, onSelectNote, onDeleteNote, categorie
     const categoryNotes = notes
       .filter(note => (note.category || '默认') === category.name)
       .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
-      .slice(0, 3) // 每个分类最多3条
     
     // 获取分类颜色（从第一条笔记或分类默认颜色）
     const color = categoryNotes[0]?.categoryColor || category.color || '#2196f3'
