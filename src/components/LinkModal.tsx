@@ -27,6 +27,20 @@ function LinkModal({ onClose, onConfirm }: LinkModalProps) {
     }
   }, [onClose])
 
+  // 自动获取标题
+  useEffect(() => {
+    if (!url) return
+    
+    // 简单的 URL 校验，确保是 http/https 开头且有一定长度
+    if (/^https?:\/\/.{5,}/.test(url)) {
+      const timer = setTimeout(() => {
+        handleFetchTitle()
+      }, 500) // 500ms 防抖，给用户一点输入时间（虽然主要是针对粘贴）
+      
+      return () => clearTimeout(timer)
+    }
+  }, [url])
+
   const normalizeUrl = (input: string) => {
     if (!input) return ''
     if (!/^https?:\/\//i.test(input)) {
@@ -42,7 +56,21 @@ function LinkModal({ onClose, onConfirm }: LinkModalProps) {
     setIsFetching(true)
     
     try {
-      // 优先尝试 microlink API，它专门用于提取网页元数据
+      // 1. 优先尝试 NoEmbed (对 YouTube 等视频网站特别有效)
+      try {
+        const noembedUrl = `https://noembed.com/embed?url=${encodeURIComponent(targetUrl)}`
+        const response = await fetch(noembedUrl)
+        const data = await response.json()
+        if (data.title) {
+          setTitle(data.title)
+          setIsFetching(false)
+          return
+        }
+      } catch (e) {
+        // ignore
+      }
+
+      // 2. 尝试 microlink API
       try {
         const microlinkUrl = `https://api.microlink.io?url=${encodeURIComponent(targetUrl)}`
         const response = await fetch(microlinkUrl)
@@ -57,7 +85,7 @@ function LinkModal({ onClose, onConfirm }: LinkModalProps) {
         console.warn('Microlink fetch failed, trying fallback...', e)
       }
 
-      // 备选：使用 allorigins 作为代理来绕过 CORS
+      // 3. 备选：使用 allorigins 作为代理来绕过 CORS
       const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`
       const response = await fetch(proxyUrl)
       const data = await response.json()
