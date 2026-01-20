@@ -93,7 +93,7 @@ function RichTextEditor({ value, onChange, placeholder }: RichTextEditorProps) {
         // 插入链接
         quill.insertText(range.index, textToInsert, 'link', url)
         // 移动光标到链接后面，并移除链接格式
-        quill.setSelection(range.index + textToInsert.length)
+        quill.setSelection(range.index + textToInsert.length, 0)
         quill.format('link', false)
       }
     }
