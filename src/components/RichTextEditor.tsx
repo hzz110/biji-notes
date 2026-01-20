@@ -2,6 +2,7 @@ import { useMemo, useRef, useEffect, useState } from 'react'
 import ReactQuill from 'react-quill'
 import 'react-quill/dist/quill.snow.css'
 import ImageModal from './ImageModal'
+import LinkModal from './LinkModal'
 import './RichTextEditor.css'
 
 interface RichTextEditorProps {
@@ -13,6 +14,7 @@ interface RichTextEditorProps {
 function RichTextEditor({ value, onChange, placeholder }: RichTextEditorProps) {
   const quillRef = useRef<ReactQuill>(null)
   const [selectedImage, setSelectedImage] = useState<string | null>(null)
+  const [showLinkModal, setShowLinkModal] = useState(false)
 
   // 配置图片上传
   const imageHandler = () => {
@@ -71,6 +73,33 @@ function RichTextEditor({ value, onChange, placeholder }: RichTextEditorProps) {
     }
   }
 
+  const linkHandler = () => {
+    setShowLinkModal(true)
+  }
+
+  const handleInsertLink = (title: string, url: string) => {
+    const quill = quillRef.current?.getEditor()
+    if (quill) {
+      const range = quill.getSelection(true)
+      if (range) {
+        // 格式：标题：链接
+        const textToInsert = title ? `${title}：${url}` : url
+        
+        // 删除选中的文本（如果有）
+        if (range.length > 0) {
+          quill.deleteText(range.index, range.length)
+        }
+        
+        // 插入链接
+        quill.insertText(range.index, textToInsert, 'link', url)
+        // 移动光标到链接后面，并移除链接格式
+        quill.setSelection(range.index + textToInsert.length)
+        quill.format('link', false)
+      }
+    }
+    setShowLinkModal(false)
+  }
+
   // 配置 Quill 模块
   const modules = useMemo(() => ({
     toolbar: {
@@ -83,7 +112,8 @@ function RichTextEditor({ value, onChange, placeholder }: RichTextEditorProps) {
         ['clean']
       ],
       handlers: {
-        image: imageHandler
+        image: imageHandler,
+        link: linkHandler
       }
     },
     clipboard: {
@@ -178,6 +208,12 @@ function RichTextEditor({ value, onChange, placeholder }: RichTextEditorProps) {
         <ImageModal
           imageUrl={selectedImage}
           onClose={() => setSelectedImage(null)}
+        />
+      )}
+      {showLinkModal && (
+        <LinkModal
+          onClose={() => setShowLinkModal(false)}
+          onConfirm={handleInsertLink}
         />
       )}
     </>
