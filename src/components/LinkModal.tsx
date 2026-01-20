@@ -42,7 +42,22 @@ function LinkModal({ onClose, onConfirm }: LinkModalProps) {
     setIsFetching(true)
     
     try {
-      // 使用 allorigins 作为代理来绕过 CORS
+      // 优先尝试 microlink API，它专门用于提取网页元数据
+      try {
+        const microlinkUrl = `https://api.microlink.io?url=${encodeURIComponent(targetUrl)}`
+        const response = await fetch(microlinkUrl)
+        const data = await response.json()
+        
+        if (data.status === 'success' && data.data?.title) {
+          setTitle(data.data.title)
+          setIsFetching(false)
+          return
+        }
+      } catch (e) {
+        console.warn('Microlink fetch failed, trying fallback...', e)
+      }
+
+      // 备选：使用 allorigins 作为代理来绕过 CORS
       const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`
       const response = await fetch(proxyUrl)
       const data = await response.json()
@@ -55,19 +70,20 @@ function LinkModal({ onClose, onConfirm }: LinkModalProps) {
         if (pageTitle) {
           setTitle(pageTitle.trim())
         } else {
-          // 如果没找到标题，尝试从 URL 中提取域名
-          try {
-            const urlObj = new URL(targetUrl)
-            setTitle(urlObj.hostname)
-          } catch {
-            setTitle(targetUrl)
-          }
+          throw new Error('No title found')
         }
+      } else {
+        throw new Error('No content returned')
       }
     } catch (error) {
       console.error('获取标题失败:', error)
-      // 失败时使用 URL 作为标题
-      setTitle(url)
+      // 失败时尝试从 URL 中提取域名
+      try {
+        const urlObj = new URL(targetUrl)
+        setTitle(urlObj.hostname)
+      } catch {
+        setTitle(targetUrl)
+      }
     } finally {
       setIsFetching(false)
     }
